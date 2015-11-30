@@ -62,11 +62,11 @@
 
 #include <QtCore/QLoggingCategory>
 #include <QtCore/QDir>
+#include <QtCore/QLocale>
 #include <QtNetwork/QHostAddress>
 #include <QtNetwork/QTcpServer>
 
 #include <kglobal.h>
-#include <klocale.h>
 #include <kcomponentdata.h>
 #include <kmimetype.h>
 #include <kio/ioslave_defaults.h>
@@ -147,7 +147,7 @@ using namespace KIO;
 extern "C" int KDE_EXPORT kdemain( int argc, char **argv )
 {
   KComponentData componentData( "kio_ftpc", "kdelibs4" );
-  ( void ) KGlobal::locale();
+  ( void ) QLocale();
 
   qCDebug(KIO_FTPS) << "Starting " << getpid();
 
@@ -323,7 +323,7 @@ bool Ftp::ftpOpenConnection (LoginMode loginMode)
   qCDebug(KIO_FTPS) << "ftpOpenConnection " << m_host << ":" << m_port << " "
                 << m_user << " [password hidden]";
 
-  infoMessage( i18n("Opening connection to host %1", m_host) );
+  infoMessage( QObject::tr("Opening connection to host %1").arg(m_host) );
 
   if ( m_host.isEmpty() )
   {
@@ -341,7 +341,7 @@ bool Ftp::ftpOpenConnection (LoginMode loginMode)
 
   if (!ftpOpenControlConnection(host, port) )
     return false;          // error emitted by ftpOpenControlConnection
-  infoMessage( i18n("Connected to host %1", m_host) );
+  infoMessage( QObject::tr("Connected to host %1").arg(m_host) );
 
   if(loginMode != loginDefered)
   {
@@ -384,7 +384,7 @@ bool Ftp::ftpOpenControlConnection( const QString &host, int port, bool ignoreSs
     if(m_iRespType != 2)
     { // login not successful, do we have an message text?
       if(psz[0])
-        sErrorMsg = i18n("%1.\n\nReason: %2", host, psz);
+        sErrorMsg = QObject::tr("%1.\n\nReason: %2").arg(host).arg(psz);
       iErrorCode = ERR_COULD_NOT_CONNECT;
     }
   }
@@ -405,7 +405,7 @@ bool Ftp::ftpOpenControlConnection( const QString &host, int port, bool ignoreSs
     if (!authSucc)
     {
       iErrorCode = ERR_SLAVE_DEFINED;
-      sErrorMsg = i18n("The FTP server does not seem to support ftps-encryption.");
+      sErrorMsg = QObject::tr("The FTP server does not seem to support ftps-encryption.");
     }
   }
 
@@ -434,14 +434,14 @@ bool Ftp::ftpOpenControlConnection( const QString &host, int port, bool ignoreSs
       {
 	if (messageBox(WarningContinueCancel, errors.at(i).errorString(), 
 	"TLS Handshake Error", 
-	i18n("&Continue"), 
-	i18n("&Cancel")) == KMessageBox::Cancel) doNotIgnore = false; 	
+	QObject::tr("&Continue"),
+	QObject::tr("&Cancel")) == KMessageBox::Cancel) doNotIgnore = false;
       }
 
       if (doNotIgnore) 
       {
 	iErrorCode = ERR_SLAVE_DEFINED;
-	sErrorMsg = i18n("TLS Handshake Error.");
+	sErrorMsg = QObject::tr("TLS Handshake Error.");
       }
       else
       {
@@ -468,7 +468,7 @@ bool Ftp::ftpOpenControlConnection( const QString &host, int port, bool ignoreSs
  */
 bool Ftp::ftpLogin()
 {
-  infoMessage( i18n("Sending login information") );
+  infoMessage( QObject::tr("Sending login information") );
 
   assert( !m_bLoggedOn );
 
@@ -516,18 +516,17 @@ bool Ftp::ftpLogin()
       // Ask user if we should retry after when login fails!
       if( failedAuth > 0 )
       {
-        errorMsg = i18n("Message sent:\nLogin using username=%1 and "
-                        "password=[hidden]\n\nServer replied:\n%2\n\n"
-                        , user, ftpResponse(0));
+        errorMsg = QObject::tr("Message sent:\nLogin using username=%1 and "
+                        "password=[hidden]\n\nServer replied:\n%2\n\n").arg(user).arg(ftpResponse(0));
       }
 
       if ( user != FTP_LOGIN )
         info.username = user;
 
-      info.prompt = i18n("You need to supply a username and a password "
+      info.prompt = QObject::tr("You need to supply a username and a password "
                           "to access this site.");
-      info.commentLabel = i18n( "Site:" );
-      info.comment = i18n("<b>%1</b>",  m_host );
+      info.commentLabel = QObject::tr( "Site:" );
+      info.comment = QObject::tr("<b>%1</b>").arg(m_host);
       info.keepPassword = true; // Prompt the user for persistence as well.
       info.readOnly = (!m_user.isEmpty() && m_user != FTP_LOGIN);
 
@@ -590,7 +589,7 @@ bool Ftp::ftpLogin()
 
 
   qCDebug(KIO_FTPS) << "Login OK";
-  infoMessage( i18n("Login OK") );
+  infoMessage( QObject::tr("Login OK") );
 
   // Okay, we're logged in. If this is IIS 4, switch dir listing style to Unix:
   // Thanks to jk@soegaard.net (Jens Kristian Sgaard) for this hint
@@ -619,7 +618,7 @@ bool Ftp::ftpLogin()
   if( !ftpSendCmd("PWD") || (m_iRespType != 2) )
   {
     qCDebug(KIO_FTPS) << "Couldn't issue pwd command";
-    error( ERR_COULD_NOT_LOGIN, i18n("Could not login to %1.", m_host) ); // or anything better ?
+    error( ERR_COULD_NOT_LOGIN, QObject::tr("Could not login to %1.").arg(m_host) ); // or anything better ?
     return false;
   }
 
@@ -1759,7 +1758,7 @@ bool Ftp::ftpReadDir(FtpEntry& de)
       // Get day number (always second field)
       tmptr->tm_mday = atoi( p_date_2 );
       // Get month from first field
-      // NOTE : no, we don't want to use KLocale here
+      // NOTE : no, we don't want to use QLocale here
       // It seems all FTP servers use the English way
       //qCDebug(KIO_FTPS) << "Looking for month " << p_date_1;
       static const char * s_months[12] = { "Jan", "Feb", "Mar", "Apr", "May", "Jun",
@@ -2206,7 +2205,7 @@ Ftp::StatusCode Ftp::ftpPut(int& iError, int iCopyFile, const KUrl& dest_url,
     {
         // To be tested
         //if ( m_user != FTP_LOGIN )
-        //    warning( i18n( "Could not change permissions for\n%1" ).arg( dest_orig ) );
+        //    warning( QObject::tr( "Could not change permissions for\n%1" ).arg( dest_orig ) );
     }
   }
 
