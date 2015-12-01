@@ -1087,7 +1087,7 @@ bool Ftp::ftpOpenCommand( const char *_command, const QString & _path, char _mod
       int result = encryptDataChannel();
       if (result != 0) 
       {
-	error(result, "TLS Negotiation failed on the data channel."); 
+	error(result, QStringLiteral("TLS Negotiation failed on the data channel."));
 	return false;
       }
     }
@@ -1563,7 +1563,7 @@ void Ftp::listDir( const KUrl &url )
 
 void Ftp::slave_status()
 {
-  kDebug(7102) << "Got slave_status host = " << (!m_host.toAscii().isEmpty() ? m_host.toAscii() : "[None]") << " [" << (m_bLoggedOn ? "Connected" : "Not connected") << "]";
+  kDebug(7102) << "Got slave_status host = " << (!m_host.toLatin1().isEmpty() ? m_host.toLatin1() : "[None]") << " [" << (m_bLoggedOn ? "Connected" : "Not connected") << "]";
   slaveStatus( m_host, m_bLoggedOn );
 }
 
@@ -1573,7 +1573,7 @@ bool Ftp::ftpOpenDir( const QString & path )
 
   // We try to change to this directory first to see whether it really is a directory.
   // (And also to follow symlinks)
-  QString tmp = path.isEmpty() ? QString("/") : path;
+  QString tmp = path.isEmpty() ? QStringLiteral("/") : path;
 
   // We get '550', whether it's a file or doesn't exist...
   if( !ftpFolder(tmp, false) )
