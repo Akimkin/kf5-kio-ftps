@@ -61,13 +61,12 @@
 #endif
 
 #include <QtCore/QLoggingCategory>
+#include <QtCore/QCoreApplication>
 #include <QtCore/QDir>
 #include <QtCore/QLocale>
 #include <QtNetwork/QHostAddress>
 #include <QtNetwork/QTcpServer>
 
-#include <kglobal.h>
-#include <kcomponentdata.h>
 #include <kmimetype.h>
 #include <kio/ioslave_defaults.h>
 #include <kio/slaveconfig.h>
@@ -146,7 +145,9 @@ using namespace KIO;
 
 extern "C" int KDE_EXPORT kdemain( int argc, char **argv )
 {
-  KComponentData componentData( "kio_ftpc", "kdelibs4" );
+  QCoreApplication app(argc, argv);
+  app.setApplicationName(QStringLiteral("kio_ftps"));
+
   ( void ) QLocale();
 
   qCDebug(KIO_FTPS) << "Starting " << getpid();
