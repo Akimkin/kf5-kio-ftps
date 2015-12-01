@@ -2484,7 +2484,7 @@ Ftp::StatusCode Ftp::ftpCopyGet(int& iError, int& iCopyFile, const QString &sCop
   return iRes;
 }
 
-void SslServer::incomingConnection(int socketDescriptor)
+void SslServer::incomingConnection(qintptr socketDescriptor)
 {
      QSslSocket *m_socket = new QSslSocket;
      if (!m_socket->setSocketDescriptor(socketDescriptor)) delete m_socket; //{

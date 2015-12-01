@@ -49,7 +49,7 @@ struct FtpEntry
 class SslServer : public QTcpServer
 {
   private: 
-    void incomingConnection(int socketDescriptor);
+    void incomingConnection(qintptr socketDescriptor);
     QSslSocket *m_socket;
   public:
     QSslSocket *socket() { return m_socket; };
