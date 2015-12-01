@@ -27,7 +27,6 @@
 
 #include <QtCore/QByteRef>
 
-#include <kurl.h>
 #include <kio/slavebase.h>
 
 #include <QtNetwork/QSslSocket>
@@ -81,24 +80,24 @@ public:
    */
   virtual void closeConnection();
 
-  virtual void stat( const KUrl &url );
+  virtual void stat( const QUrl &url );
 
-  virtual void listDir( const KUrl & url );
-  virtual void mkdir( const KUrl & url, int permissions );
-  virtual void rename( const KUrl & src, const KUrl & dst, KIO::JobFlags flags );
-  virtual void del( const KUrl & url, bool isfile );
-  virtual void chmod( const KUrl & url, int permissions );
+  virtual void listDir( const QUrl & url );
+  virtual void mkdir( const QUrl & url, int permissions );
+  virtual void rename( const QUrl & src, const QUrl & dst, KIO::JobFlags flags );
+  virtual void del( const QUrl & url, bool isfile );
+  virtual void chmod( const QUrl & url, int permissions );
 
-  virtual void get( const KUrl& url );
-  virtual void put( const KUrl& url, int permissions, KIO::JobFlags flags );
-  //virtual void mimetype( const KUrl& url );
+  virtual void get( const QUrl& url );
+  virtual void put( const QUrl& url, int permissions, KIO::JobFlags flags );
+  //virtual void mimetype( const QUrl& url );
 
   virtual void slave_status();
 
   /**
    * Handles the case that one side of the job is a local file
    */
-  virtual void copy( const KUrl &src, const KUrl &dest, int permissions, KIO::JobFlags flags );
+  virtual void copy( const QUrl &src, const QUrl &dest, int permissions, KIO::JobFlags flags );
 
 private:
   // ------------------------------------------------------------------------
@@ -306,7 +305,7 @@ private:
    * @param hCopyOffset local file only: non-zero for resume
    * @return 0 for success, -1 for server error, -2 for client error
    */
-  StatusCode ftpGet(int& iError, int iCopyFile, const KUrl& url, KIO::fileoffset_t hCopyOffset);
+  StatusCode ftpGet(int& iError, int iCopyFile, const QUrl& url, KIO::fileoffset_t hCopyOffset);
 
   /**
    * This is the internal implementation of put() - see copy().
@@ -318,7 +317,7 @@ private:
    * @param iCopyFile   -1 -or- handle of a local source file
    * @return 0 for success, -1 for server error, -2 for client error
    */
-  StatusCode ftpPut(int& iError, int iCopyFile, const KUrl& url, int permissions, KIO::JobFlags flags);
+  StatusCode ftpPut(int& iError, int iCopyFile, const QUrl& url, int permissions, KIO::JobFlags flags);
 
   /**
    * helper called from copy() to implement FILE -> FTP transfers
@@ -328,7 +327,7 @@ private:
    * @param sCopyFile   path of the local source file
    * @return 0 for success, -1 for server error, -2 for client error
    */
-  StatusCode ftpCopyPut(int& iError, int& iCopyFile, const QString &sCopyFile, const KUrl& url, int permissions, KIO::JobFlags flags);
+  StatusCode ftpCopyPut(int& iError, int& iCopyFile, const QString &sCopyFile, const QUrl& url, int permissions, KIO::JobFlags flags);
 
   /**
    * helper called from copy() to implement FTP -> FILE transfers
@@ -338,7 +337,7 @@ private:
    * @param sCopyFile   path of the local destination file
    * @return 0 for success, -1 for server error, -2 for client error
    */
-  StatusCode ftpCopyGet(int& iError, int& iCopyFile, const QString &sCopyFile, const KUrl& url, int permissions, KIO::JobFlags flags);
+  StatusCode ftpCopyGet(int& iError, int& iCopyFile, const QString &sCopyFile, const QUrl& url, int permissions, KIO::JobFlags flags);
 
 private: // data members
 
@@ -350,7 +349,7 @@ private: // data members
    * Where we end up after connecting
    */
   QString m_initialPath;
-  KUrl m_proxyURL;
+  QUrl m_proxyURL;
 
  /**
    * the current working directory - see ftpFolder

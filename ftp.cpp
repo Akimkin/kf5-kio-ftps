@@ -295,7 +295,7 @@ void Ftp::setHost( const QString& _host, quint16 _port, const QString& _user,
   qCDebug(KIO_FTPS) << "Ftp::setHost (" << getpid() << "): " << _host << " port=" << _port;
 
   m_proxyURL = metaData("UseProxy");
-  m_bUseProxy = (m_proxyURL.isValid() && m_proxyURL.protocol() == "ftp");
+  m_bUseProxy = (m_proxyURL.isValid() && m_proxyURL.scheme() == "ftp");
 
   if ( m_host != _host || m_port != _port ||
        m_user != _user || m_pass != _pass )
@@ -495,11 +495,11 @@ bool Ftp::ftpLogin()
   }
 
   AuthInfo info;
-  info.url.setProtocol( "ftp" );
+  info.url.setScheme( "ftp" );
   info.url.setHost( m_host );
   if ( m_port > 0 && m_port != DEFAULT_FTP_PORT )
       info.url.setPort( m_port );
-  info.url.setUser( user );
+  info.url.setUserName( user );
 
   QByteArray tempbuf;
   int failedAuth = 0;
@@ -1124,7 +1124,7 @@ bool Ftp::ftpCloseCommand()
   return true;
 }
 
-void Ftp::mkdir( const KUrl & url, int permissions )
+void Ftp::mkdir( const QUrl & url, int permissions )
 {
   if( !ftpOpenConnection(loginImplicit) )
         return;
@@ -1160,7 +1160,7 @@ void Ftp::mkdir( const KUrl & url, int permissions )
   finished();
 }
 
-void Ftp::rename( const KUrl& src, const KUrl& dst, KIO::JobFlags flags )
+void Ftp::rename( const QUrl& src, const QUrl& dst, KIO::JobFlags flags )
 {
   if( !ftpOpenConnection(loginImplicit) )
         return;
@@ -1194,7 +1194,7 @@ bool Ftp::ftpRename( const QString & src, const QString & dst, KIO::JobFlags )
   return true;
 }
 
-void Ftp::del( const KUrl& url, bool isfile )
+void Ftp::del( const QUrl& url, bool isfile )
 {
   if( !ftpOpenConnection(loginImplicit) )
         return;
@@ -1237,7 +1237,7 @@ bool Ftp::ftpChmod( const QString & path, int permissions )
   return false;
 }
 
-void Ftp::chmod( const KUrl & url, int permissions )
+void Ftp::chmod( const QUrl & url, int permissions )
 {
   if( !ftpOpenConnection(loginImplicit) )
         return;
@@ -1266,7 +1266,7 @@ void Ftp::ftpCreateUDSEntry( const QString & filename, FtpEntry& ftpEnt, UDSEntr
   {
     entry.insert( KIO::UDSEntry::UDS_LINK_DEST, ftpEnt.link );
 
-    KMimeType::Ptr mime = KMimeType::findByUrl( KUrl("ftps://host/" + filename ) );
+    KMimeType::Ptr mime = KMimeType::findByUrl( QUrl("ftps://host/" + filename ) );
     // Links on ftp sites are often links to dirs, and we have no way to check
     // that. Let's do like Netscape : assume dirs generally.
     // But we do this only when the mimetype can't be known from the filename.
@@ -1322,7 +1322,7 @@ void Ftp::ftpStatAnswerNotFound( const QString & path, const QString & filename 
     error( ERR_DOES_NOT_EXIST, path );
 }
 
-void Ftp::stat( const KUrl &url)
+void Ftp::stat( const QUrl &url)
 {
   qCDebug(KIO_FTPS) << "Ftp::stat : path='" << url.path() << "'";
   if( !ftpOpenConnection(loginImplicit) )
@@ -1348,9 +1348,9 @@ void Ftp::stat( const KUrl &url)
     return;
   }
 
-  KUrl tempurl( url );
+  QUrl tempurl( url );
   tempurl.setPath( path ); // take the clean one
-  QString listarg; // = tempurl.directory(KUrl::ObeyTrailingSlash);
+  QString listarg; // = tempurl.adjusted(QUrl::RemoveFilename).path();
   QString parentDir;
   QString filename = tempurl.fileName();
   Q_ASSERT(!filename.isEmpty());
@@ -1378,7 +1378,7 @@ void Ftp::stat( const KUrl &url)
   if (!isDir)
   {
     // It is a file or it doesn't exist, try going to parent directory
-    parentDir = tempurl.directory(KUrl::AppendTrailingSlash);
+    parentDir = tempurl.adjusted(QUrl::RemoveFilename).path();
     // With files we can do "LIST <filename>" to avoid listing the whole dir
     listarg = filename;
   }
@@ -1424,7 +1424,7 @@ void Ftp::stat( const KUrl &url)
   Q_ASSERT( !search.isEmpty() && search != "/" );
 
   bool bFound = false;
-  KUrl      linkURL;
+  QUrl      linkURL;
   FtpEntry  ftpEnt;
   while( ftpReadDir(ftpEnt) )
   {
@@ -1458,7 +1458,7 @@ void Ftp::stat( const KUrl &url)
                     linkURL.setPath( listarg ); // this is what we were listing (the link)
                     linkURL.setPath( linkURL.directory() ); // go up one dir
                     linkURL.addPath( ftpEnt.link ); // replace link by its destination
-                    qCDebug(KIO_FTPS) << "linkURL now " << linkURL.prettyUrl();
+                    qCDebug(KIO_FTPS) << "linkURL now " << linkURL.toDisplayString();
                 }
                 // Re-add the filename we're looking for
                 linkURL.addPath( filename );
@@ -1483,7 +1483,7 @@ void Ftp::stat( const KUrl &url)
   {
       if ( linkURL == url || linkURL == tempurl )
       {
-          error( ERR_CYCLIC_LINK, linkURL.prettyUrl() );
+          error( ERR_CYCLIC_LINK, linkURL.toDisplayString() );
           return;
       }
       stat( linkURL );
@@ -1495,9 +1495,9 @@ void Ftp::stat( const KUrl &url)
 }
 
 
-void Ftp::listDir( const KUrl &url )
+void Ftp::listDir( const QUrl &url )
 {
-  qCDebug(KIO_FTPS) << "Ftp::listDir " << url.prettyUrl();
+  qCDebug(KIO_FTPS) << "Ftp::listDir " << url.toDisplayString();
   if( !ftpOpenConnection(loginImplicit) )
         return;
 
@@ -1505,20 +1505,20 @@ void Ftp::listDir( const KUrl &url )
   QString path = url.path();
   if ( path.isEmpty() )
   {
-    KUrl realURL;
-    realURL.setProtocol( "ftps" );
+    QUrl realURL;
+    realURL.setScheme( "ftps" );
     if ( m_user != FTP_LOGIN )
-      realURL.setUser( m_user );
+      realURL.setUserName( m_user );
     // We set the password, so that we don't ask for it if it was given
     if ( m_pass != FTP_PASSWD )
-      realURL.setPass( m_pass );
+      realURL.setPassword( m_pass );
     realURL.setHost( m_host );
     if ( m_port > 0 && m_port != DEFAULT_FTP_PORT )
         realURL.setPort( m_port );
     if ( m_initialPath.isEmpty() )
         m_initialPath = "/";
     realURL.setPath( m_initialPath );
-    qCDebug(KIO_FTPS) << "REDIRECTION to " << realURL.prettyUrl();
+    qCDebug(KIO_FTPS) << "REDIRECTION to " << realURL.toDisplayString();
     redirection( realURL );
     finished();
     return;
@@ -1570,7 +1570,7 @@ void Ftp::slave_status()
 
 bool Ftp::ftpOpenDir( const QString & path )
 {
-  //QString path( _url.path(KUrl::RemoveTrailingSlash) );
+  //QString path( _url.path(QUrl::RemoveTrailingSlash) );
 
   // We try to change to this directory first to see whether it really is a directory.
   // (And also to follow symlinks)
@@ -1810,7 +1810,7 @@ bool Ftp::ftpReadDir(FtpEntry& de)
 // public: get           download file from server
 // helper: ftpGet        called from get() and copy()
 //===============================================================================
-void Ftp::get( const KUrl & url )
+void Ftp::get( const QUrl & url )
 {
   qCDebug(KIO_FTPS) << "Ftp::get " << url.url();
   int iError = 0;
@@ -1820,7 +1820,7 @@ void Ftp::get( const KUrl & url )
   ftpCloseCommand();                        // must close command!
 }
 
-Ftp::StatusCode Ftp::ftpGet(int& iError, int iCopyFile, const KUrl& url, KIO::fileoffset_t llOffset)
+Ftp::StatusCode Ftp::ftpGet(int& iError, int iCopyFile, const QUrl& url, KIO::fileoffset_t llOffset)
 {
   // Calls error() by itself!
   if( !ftpOpenConnection(loginImplicit) )
@@ -2016,7 +2016,7 @@ Ftp::StatusCode Ftp::ftpGet(int& iError, int iCopyFile, const KUrl& url, KIO::fi
 // public: put           upload file to server
 // helper: ftpPut        called from put() and copy()
 //===============================================================================
-void Ftp::put(const KUrl& url, int permissions, KIO::JobFlags flags)
+void Ftp::put(const QUrl& url, int permissions, KIO::JobFlags flags)
 {
   qCDebug(KIO_FTPS) << "Ftp::put " << url.url();
   int iError = 0;                           // iError gets status
@@ -2026,7 +2026,7 @@ void Ftp::put(const KUrl& url, int permissions, KIO::JobFlags flags)
   ftpCloseCommand();                        // must close command!
 }
 
-Ftp::StatusCode Ftp::ftpPut(int& iError, int iCopyFile, const KUrl& dest_url,
+Ftp::StatusCode Ftp::ftpPut(int& iError, int iCopyFile, const QUrl& dest_url,
                             int permissions, KIO::JobFlags flags)
 {
   if( !ftpOpenConnection(loginImplicit) )
@@ -2295,7 +2295,7 @@ bool Ftp::ftpFolder(const QString& path, bool bReportError)
 // helper: ftpCopyPut    called from copy() on upload
 // helper: ftpCopyGet    called from copy() on download
 //===============================================================================
-void Ftp::copy( const KUrl &src, const KUrl &dest, int permissions, KIO::JobFlags flags )
+void Ftp::copy( const QUrl &src, const QUrl &dest, int permissions, KIO::JobFlags flags )
 {
   int iError = 0;
   int iCopyFile = -1;
@@ -2333,7 +2333,7 @@ void Ftp::copy( const KUrl &src, const KUrl &dest, int permissions, KIO::JobFlag
 
 
 Ftp::StatusCode Ftp::ftpCopyPut(int& iError, int& iCopyFile, const QString &sCopyFile,
-                                const KUrl& url, int permissions, KIO::JobFlags flags)
+                                const QUrl& url, int permissions, KIO::JobFlags flags)
 {
   // check if source is ok ...
   KDE_struct_stat buff;
@@ -2370,7 +2370,7 @@ Ftp::StatusCode Ftp::ftpCopyPut(int& iError, int& iCopyFile, const QString &sCop
 
 
 Ftp::StatusCode Ftp::ftpCopyGet(int& iError, int& iCopyFile, const QString &sCopyFile,
-                                const KUrl& url, int permissions, KIO::JobFlags flags)
+                                const QUrl& url, int permissions, KIO::JobFlags flags)
 {
   // check if destination is ok ...
   KDE_struct_stat buff;
