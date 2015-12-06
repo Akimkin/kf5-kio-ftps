@@ -1565,11 +1565,10 @@ void Ftp::listDir( const QUrl &url )
       //   qCDebug(KIO_FTPS) << "is a link to " << ftpEnt.link;
       entry.clear();
       ftpCreateUDSEntry( ftpEnt.name, ftpEnt, entry, false );
-      listEntry( entry, false );
+      listEntry( entry );
     }
   }
 
-  listEntry( entry, true ); // ready
   ftpCloseCommand();        // closes the data connection only
   finished();
 }
