@@ -10,12 +10,12 @@ include(KDECompilerSettings)
 include(FeatureSummary)
 
 find_package(Qt5 REQUIRED COMPONENTS Network Widgets)
-find_package(KF5 REQUIRED COMPONENTS KIO CoreAddons WidgetsAddons)
+find_package(KF5 REQUIRED COMPONENTS KIO CoreAddons WidgetsAddons KDELibs4Support)
 
 feature_summary(WHAT ALL FATAL_ON_MISSING_REQUIRED_PACKAGES)
 
 add_library(kio_ftps MODULE ftp.cpp)
-target_link_libraries(kio_ftps Qt5::Core Qt5::Network Qt5::Widgets KF5::KIOCore KF5::WidgetsAddons)
+target_link_libraries(kio_ftps Qt5::Core Qt5::Network Qt5::Widgets KF5::KDELibs4Support KF5::KIOCore KF5::WidgetsAddons)
 
 install(TARGETS kio_ftps DESTINATION ${PLUGIN_INSTALL_DIR})
 install(FILES ftps.protocol DESTINATION ${SERVICES_INSTALL_DIR})
